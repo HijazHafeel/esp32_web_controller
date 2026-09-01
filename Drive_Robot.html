@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ESP32 Manual Robot Controller (htmx WS)</title>
+  
+  <!-- htmx Core & WebSocket Extension -->
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/ws.js"></script>
+
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      text-align: center; 
+      background: #0f172a; 
+      color: #fff; 
+      margin: 0; 
+      padding: 20px; 
+    }
+    h2 { 
+      color: #38bdf8; 
+      margin-bottom: 20px; 
+    }
+    .joystick-grid { 
+      display: grid; 
+      grid-template-columns: repeat(3, 85px); 
+      grid-template-rows: repeat(3, 85px); 
+      gap: 12px; 
+      justify-content: center; 
+      margin: 30px auto; 
+    }
+    .btn { 
+      background: #1e293b; 
+      border: 2px solid #38bdf8; 
+      color: #38bdf8; 
+      font-size: 28px; 
+      font-weight: bold; 
+      border-radius: 16px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      user-select: none; 
+      -webkit-user-select: none; 
+      cursor: pointer; 
+      transition: 0.1s; 
+    }
+    .btn:active { 
+      background: #38bdf8; 
+      color: #0f172a; 
+      transform: scale(0.95); 
+    }
+    .btn-stop { 
+      border-color: #ef4444; 
+      color: #ef4444; 
+    }
+    .btn-stop:active { 
+      background: #ef4444; 
+      color: #fff; 
+    }
+    .slider-container { 
+      margin: 30px auto; 
+      max-width: 280px; 
+      background: #1e293b; 
+      padding: 15px; 
+      border-radius: 12px; 
+    }
+    input[type=range] { 
+      width: 100%; 
+      accent-color: #38bdf8; 
+      margin-top: 10px; 
+    }
+  </style>
+</head>
+
+<!-- Connect to your ESP32 IP on WebSocket port 81 -->
+<body hx-ext="ws" ws-connect="ws://192.168.1.50:81">
+  <h2>ESP32 Robot Controller</h2>
+
+  <div class="joystick-grid">
+    <div></div>
+
+    <!-- Forward -->
+    <div class="btn" 
+         ws-send 
+         hx-trigger="mousedown, touchstart" 
+         hx-vals='{"dir": "forward"}'
+         ws-send 
+         hx-trigger="mouseup, touchend" 
+         hx-vals='{"dir": "stop"}'>&#9650;</div>
+
+    <div></div>
+
+    <!-- Left -->
+    <div class="btn" 
+         ws-send 
+         hx-trigger="mousedown, touchstart" 
+         hx-vals='{"dir": "left"}'
+         ws-send 
+         hx-trigger="mouseup, touchend" 
+         hx-vals='{"dir": "stop"}'>&#9664;</div>
+
+    <!-- Stop -->
+    <div class="btn btn-stop" 
+         ws-send 
+         hx-trigger="click" 
+         hx-vals='{"dir": "stop"}'>&#9632;</div>
+
+    <!-- Right -->
+    <div class="btn" 
+         ws-send 
+         hx-trigger="mousedown, touchstart" 
+         hx-vals='{"dir": "right"}'
+         ws-send 
+         hx-trigger="mouseup, touchend" 
+         hx-vals='{"dir": "stop"}'>&#9654;</div>
+
+    <div></div>
+
+    <!-- Backward -->
+    <div class="btn" 
+         ws-send 
+         hx-trigger="mousedown, touchstart" 
+         hx-vals='{"dir": "backward"}'
+         ws-send 
+         hx-trigger="mouseup, touchend" 
+         hx-vals='{"dir": "stop"}'>&#9660;</div>
+
+    <div></div>
+  </div>
+
+  <!-- Speed Control Slider -->
+  <div class="slider-container">
+    <label>Speed PWM: <span id="speedVal">200</span></label><br>
+    <input type="range" min="100" max="255" value="200"
+           ws-send 
+           hx-trigger="input" 
+           hx-vals='js:{speed: event.target.value}'
+           oninput="document.getElementById('speedVal').innerText = this.value">
+  </div>
+</body>
+</html>
