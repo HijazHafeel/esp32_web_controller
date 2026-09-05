@@ -1,4 +1,4 @@
-const int IR_ANALOG_PIN = A0; 
+const int IR_ANALOG_PIN = 14; 
 const int THRESHOLD = 500; // Adjust this value based on ambient room light
 
 void setup() {
