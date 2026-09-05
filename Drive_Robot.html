@@ -3,12 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>ESP32 Manual Robot Controller (htmx WS)</title>
-  
-  <!-- htmx Core & WebSocket Extension -->
-  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-  <script src="https://unpkg.com/htmx.org@1.9.10/dist/ext/ws.js"></script>
-
+  <title>ESP32 Robot Controller</title>
   <style>
     body { 
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -17,18 +12,21 @@
       color: #fff; 
       margin: 0; 
       padding: 20px; 
+      user-select: none;
+      -webkit-user-select: none;
     }
-    h2 { 
-      color: #38bdf8; 
-      margin-bottom: 20px; 
-    }
+    h2 { color: #38bdf8; margin-bottom: 10px; }
+    #status { font-weight: bold; margin-bottom: 20px; }
+    .online { color: #4ade80; }
+    .offline { color: #f87171; }
+
     .joystick-grid { 
       display: grid; 
       grid-template-columns: repeat(3, 85px); 
       grid-template-rows: repeat(3, 85px); 
       gap: 12px; 
       justify-content: center; 
-      margin: 30px auto; 
+      margin: 20px auto; 
     }
     .btn { 
       background: #1e293b; 
@@ -40,10 +38,8 @@
       display: flex; 
       align-items: center; 
       justify-content: center; 
-      user-select: none; 
-      -webkit-user-select: none; 
       cursor: pointer; 
-      transition: 0.1s; 
+      touch-action: manipulation;
     }
     .btn:active { 
       background: #38bdf8; 
@@ -59,7 +55,7 @@
       color: #fff; 
     }
     .slider-container { 
-      margin: 30px auto; 
+      margin: 20px auto; 
       max-width: 280px; 
       background: #1e293b; 
       padding: 15px; 
@@ -72,71 +68,63 @@
     }
   </style>
 </head>
-
-<!-- Connect to your ESP32 IP on WebSocket port 81 -->
-<body hx-ext="ws" ws-connect="ws://192.168.1.50:81">
+<body>
   <h2>ESP32 Robot Controller</h2>
+  <div id="status" class="offline">Status: Disconnected</div>
 
   <div class="joystick-grid">
     <div></div>
-
     <!-- Forward -->
-    <div class="btn" 
-         ws-send 
-         hx-trigger="mousedown, touchstart" 
-         hx-vals='{"dir": "forward"}'
-         ws-send 
-         hx-trigger="mouseup, touchend" 
-         hx-vals='{"dir": "stop"}'>&#9650;</div>
-
+    <div class="btn" onmousedown="sendCmd('F')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('F')" ontouchend="sendCmd('S')">&#9650;</div>
     <div></div>
 
     <!-- Left -->
-    <div class="btn" 
-         ws-send 
-         hx-trigger="mousedown, touchstart" 
-         hx-vals='{"dir": "left"}'
-         ws-send 
-         hx-trigger="mouseup, touchend" 
-         hx-vals='{"dir": "stop"}'>&#9664;</div>
+    <div class="btn" onmousedown="sendCmd('L')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('L')" ontouchend="sendCmd('S')">&#9664;</div>
 
     <!-- Stop -->
-    <div class="btn btn-stop" 
-         ws-send 
-         hx-trigger="click" 
-         hx-vals='{"dir": "stop"}'>&#9632;</div>
+    <div class="btn btn-stop" onclick="sendCmd('S')">&#9632;</div>
 
     <!-- Right -->
-    <div class="btn" 
-         ws-send 
-         hx-trigger="mousedown, touchstart" 
-         hx-vals='{"dir": "right"}'
-         ws-send 
-         hx-trigger="mouseup, touchend" 
-         hx-vals='{"dir": "stop"}'>&#9654;</div>
-
+    <div class="btn" onmousedown="sendCmd('R')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('R')" ontouchend="sendCmd('S')">&#9654;</div>
     <div></div>
 
     <!-- Backward -->
-    <div class="btn" 
-         ws-send 
-         hx-trigger="mousedown, touchstart" 
-         hx-vals='{"dir": "backward"}'
-         ws-send 
-         hx-trigger="mouseup, touchend" 
-         hx-vals='{"dir": "stop"}'>&#9660;</div>
-
+    <div class="btn" onmousedown="sendCmd('B')" onmouseup="sendCmd('S')" ontouchstart="sendCmd('B')" ontouchend="sendCmd('S')">&#9660;</div>
     <div></div>
   </div>
 
   <!-- Speed Control Slider -->
   <div class="slider-container">
     <label>Speed PWM: <span id="speedVal">200</span></label><br>
-    <input type="range" min="100" max="255" value="200"
-           ws-send 
-           hx-trigger="input" 
-           hx-vals='js:{speed: event.target.value}'
-           oninput="document.getElementById('speedVal').innerText = this.value">
+    <input type="range" min="100" max="255" value="200" oninput="updateSpeed(this.value)">
   </div>
+
+  <script>
+    const ws = new WebSocket('ws://192.168.1.100:81');
+    const statusEl = document.getElementById('status');
+
+    ws.onopen = () => {
+      statusEl.innerText = "Status: Connected";
+      statusEl.className = "online";
+    };
+
+    ws.onclose = () => {
+      statusEl.innerText = "Status: Disconnected";
+      statusEl.className = "offline";
+    };
+
+    function sendCmd(cmd) {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(cmd);
+      }
+    }
+
+    function updateSpeed(val) {
+      document.getElementById('speedVal').innerText = val;
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send("PWM:" + val);
+      }
+    }
+  </script>
 </body>
 </html>
