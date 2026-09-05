@@ -1,20 +1,24 @@
-const int IR_ANALOG_PIN = 14; 
-const int THRESHOLD = 500; // Adjust this value based on ambient room light
+const int IR_ANALOG_PIN = 34; // Connected to the sensor Signal/OUT pin
+int THRESHOLD = 2000;         // Midpoint threshold (0 to 4095 range)
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
+  
+  // Set ADC attenuation to measure up to 3.3V accurately
+  analogSetAttenuation(ADC_11db); 
 }
 
 void loop() {
-  int analogVal = analogRead(IR_ANALOG_PIN);
+  int rawValue = analogRead(IR_ANALOG_PIN);
 
-  Serial.print("IR Reading: ");
-  Serial.print(analogVal);
+  Serial.print("Raw Value: ");
+  Serial.print(rawValue);
 
-  if (analogVal < THRESHOLD) {
-    Serial.println(" -> LIGHT Surface");
+  // Reflective surfaces return lower voltage / lower raw readings on standard IR phototransistors
+  if (rawValue < THRESHOLD) {
+    Serial.println(" | Result: LIGHT Surface Detected");
   } else {
-    Serial.println(" -> DARK Surface");
+    Serial.println(" | Result: DARK Surface Detected");
   }
 
   delay(200);
